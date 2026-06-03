@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ShopHelp AI — Cold Email Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3d;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e97b;
+    --text: #f0f0f8;
+    --muted: #6b6b8a;
+    --danger: #ff4d6d;
+    --warning: #ffd166;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(108,99,255,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(255,101,132,0.08) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* LAYOUT */
+  .app { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; }
+  .logo-text span { color: var(--accent); }
+
+  /* NAV TABS */
+  nav { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px; }
+  .tab {
+    padding: 8px 20px; border-radius: 8px; border: none; background: none;
+    color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .tab.active { background: var(--accent); color: white; }
+  .tab:hover:not(.active) { color: var(--text); background: var(--surface2); }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 26px;
+    margin-bottom: 6px;
+  }
+  .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif; font-weight: 600; font-size: 14px;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+    margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-full { grid-column: 1 / -1; }
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  label { font-size: 13px; font-weight: 500; color: var(--muted); }
+  input, textarea, select {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 16px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+  }
+  textarea { resize: vertical; min-height: 160px; font-family: 'DM Mono', monospace; font-size: 13px; line-height: 1.6; }
+  .subject-input { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 24px; border-radius: 10px; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #8b83ff);
+    color: white; box-shadow: 0 4px 20px rgba(108,99,255,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(108,99,255,0.4); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-success {
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+    color: #0a2a1a; box-shadow: 0 4px 20px rgba(67,233,123,0.25);
+  }
+  .btn-success:hover { transform: translateY(-1px); }
+  .btn-success:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-outline {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,0.08); }
+  .btn-danger { background: var(--danger); color: white; font-size: 12px; padding: 6px 14px; border-radius: 8px; }
+  .btn-sm { padding: 7px 14px; font-size: 13px; border-radius: 8px; }
+  .btn-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+
+  /* LOADING */
+  .spinner {
+    width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white; border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* STATUS BADGE */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  }
+  .badge-sent { background: rgba(108,99,255,0.15); color: #8b83ff; }
+  .badge-replied { background: rgba(67,233,123,0.15); color: var(--accent3); }
+  .badge-generated { background: rgba(255,209,102,0.15); color: var(--warning); }
+  .badge-pending { background: rgba(107,107,138,0.15); color: var(--muted); }
+  .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* ALERT */
+  .alert {
+    padding: 12px 16px; border-radius: 10px; font-size: 13px;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+  }
+  .alert-error { background: rgba(255,77,109,0.12); border: 1px solid rgba(255,77,109,0.3); color: #ff8fa3; }
+  .alert-success { background: rgba(67,233,123,0.12); border: 1px solid rgba(67,233,123,0.3); color: var(--accent3); }
+  .alert-info { background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.3); color: #a89fff; }
+
+  /* DIVIDER */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+  /* FOLLOWUP SECTION */
+  .followup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .followup-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  .followup-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px;
+  }
+  .followup-label {
+    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .followup-label.f1 { color: #a89fff; }
+  .followup-label.f2 { color: #ff8fa3; }
+  .followup-label.f3 { color: var(--warning); }
+  .followup-label.final { color: var(--accent3); }
+  .followup-card textarea { min-height: 100px; margin-bottom: 10px; }
+  .followup-card input[type="date"] { margin-bottom: 10px; color-scheme: dark; }
+
+  /* DASHBOARD TABLE */
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; min-width: 900px; }
+  thead tr { background: var(--surface2); border-bottom: 1px solid var(--border); }
+  th {
+    padding: 12px 16px; text-align: left;
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(108,99,255,0.04); }
+  td { padding: 14px 16px; font-size: 13px; vertical-align: middle; }
+  .td-url { color: var(--accent); font-size: 12px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .td-email { color: var(--text); font-size: 12px; }
+  .td-open { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--warning); }
+  .td-date { font-size: 11px; color: var(--muted); }
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--muted);
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; }
+
+  /* STATS */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .stat-card.s1 .stat-num { color: #a89fff; }
+  .stat-card.s2 .stat-num { color: var(--accent3); }
+  .stat-card.s3 .stat-num { color: var(--warning); }
+  .stat-card.s4 .stat-num { color: #ff8fa3; }
+
+  /* PREVIEW BADGE */
+  .preview-label {
+    font-size: 11px; color: var(--muted); margin-bottom: 6px; font-family: 'DM Mono', monospace;
+  }
+
+  /* COPY FEEDBACK */
+  .copy-feedback {
+    font-size: 12px; color: var(--accent3); opacity: 0;
+    transition: opacity 0.3s; margin-left: 8px;
+  }
+  .copy-feedback.show { opacity: 1; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid.three { grid-template-columns: 1fr; }
+    .followup-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    nav .tab { padding: 8px 12px; font-size: 12px; }
+    header { flex-direction: column; gap: 16px; align-items: flex-start; }
+  }
+  @media (max-width: 480px) {
+    .stats-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">✉️</div>
+      <div class="logo-text">Shop<span>Help</span> AI</div>
+    </div>
+    <nav>
+      <button class="tab active" onclick="switchPage('generate')">✨ Generate Email</button>
+      <button class="tab" onclick="switchPage('dashboard')">📊 Dashboard</button>
+    </nav>
+  </header>
+
+  <!-- ===== PAGE: GENERATE ===== -->
+  <div class="page active" id="page-generate">
+    <div class="section-title">Generate Cold Email</div>
+    <div class="section-sub">AI analyzes the store and writes a personalized email for you</div>
+
+    <div id="alert-gen"></div>
+
+    <!-- STEP 1: INPUT -->
+    <div class="card" id="card-input">
+      <div class="card-title"><span class="dot"></span>Step 1 — Store Info</div>
+      <div class="form-grid three">
+        <div class="field form-full">
+          <label>Ecommerce Store URL *</label>
+          <input type="url" id="storeUrl" placeholder="https://example-store.com" />
+        </div>
+        <div class="field">
+          <label>Recipient Email *</label>
+          <input type="email" id="toEmail" placeholder="owner@store.com" />
+        </div>
+        <div class="field">
+          <label>Sender Name</label>
+          <input type="text" id="senderName" placeholder="Shohel" value="Shohel" />
+        </div>
+        <div class="field">
+          <label>Language</label>
+          <select id="language">
+            <option value="English">English</option>
+            <option value="Bengali">Bengali</option>
+            <option value="Spanish">Spanish</option>
+            <option value="French">French</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-generate" onclick="generateEmail()">
+          <span>✨</span> Generate Email
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2: EMAIL PREVIEW + EDIT -->
+    <div class="card" id="card-preview" style="display:none;">
+      <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>Step 2 — Review & Edit Email</div>
+
+      <div class="field" style="margin-bottom:16px;">
+        <div class="preview-label">SUBJECT</div>
+        <input type="text" id="emailSubject" class="subject-input" placeholder="Email subject..." />
+      </div>
+
+      <div class="field">
+        <div class="preview-label">EMAIL BODY</div>
+        <textarea id="emailBody" placeholder="Email body..."></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-success" id="btn-send" onclick="sendEmail()">
+          <span>🚀</span> Send Email
+        </button>
+        <button class="btn btn-outline" onclick="copyEmail()">
+          <span>📋</span> Copy Email
+          <span class="copy-feedback" id="copy-fb">Copied!</span>
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="resetGenerate()">↩ Start Over</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: FOLLOW-UP EMAILS -->
+    <div class="card" id="card-followup" style="display:none;">
+      <div class="card-title"><span class="dot" style="background:var(--warning)"></span>Step 3 — Schedule Follow-up Emails</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">
+        Write follow-up emails and set dates. They will be sent automatically by the system at 9AM on the selected date.
+      </p>
+
+      <div class="followup-grid">
+
+        <!-- Follow-up 1 -->
+        <div class="followup-card">
+          <div class="followup-header">
+            <span class="followup-label f1">Follow-up 1</span>
+            <button class="btn btn-outline btn-sm" onclick="generateFollowup(1)">
+              <span id="fu1-spin"></span> AI Generate
+            </button>
+          </div>
+          <input type="text" id="fu1-subject" placeholder="Subject..." style="margin-bottom:10px;" />
+          <textarea id="fu1-body" placeholder="Write or generate follow-up email..."></textarea>
+          <input type="date" id="fu1-date" />
+          <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;justify-content:center;" onclick="saveFollowup(1)">
+            <span id="fu1-save-spin"></span> 💾 Save to Schedule
+          </button>
+          <div id="fu1-status"></div>
+        </div>
+
+        <!-- Follow-up 2 -->
+        <div class="followup-card">
+          <div class="followup-header">
+            <span class="followup-label f2">Follow-up 2</span>
+            <button class="btn btn-outline btn-sm" onclick="generateFollowup(2)">
+              <span id="fu2-spin"></span> AI Generate
+            </button>
+          </div>
+          <input type="text" id="fu2-subject" placeholder="Subject..." style="margin-bottom:10px;" />
+          <textarea id="fu2-body" placeholder="Write or generate follow-up email..."></textarea>
+          <input type="date" id="fu2-date" />
+          <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;justify-content:center;" onclick="saveFollowup(2)">
+            <span id="fu2-save-spin"></span> 💾 Save to Schedule
+          </button>
+          <div id="fu2-status"></div>
+        </div>
+
+        <!-- Follow-up 3 -->
+        <div class="followup-card">
+          <div class="followup-header">
+            <span class="followup-label f3">Follow-up 3</span>
+            <button class="btn btn-outline btn-sm" onclick="generateFollowup(3)">
+              <span id="fu3-spin"></span> AI Generate
+            </button>
+          </div>
+          <input type="text" id="fu3-subject" placeholder="Subject..." style="margin-bottom:10px;" />
+          <textarea id="fu3-body" placeholder="Write or generate follow-up email..."></textarea>
+          <input type="date" id="fu3-date" />
+          <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;justify-content:center;" onclick="saveFollowup(3)">
+            <span id="fu3-save-spin"></span> 💾 Save to Schedule
+          </button>
+          <div id="fu3-status"></div>
+        </div>
+
+        <!-- Final -->
+        <div class="followup-card">
+          <div class="followup-header">
+            <span class="followup-label final">Final Email</span>
+            <button class="btn btn-outline btn-sm" onclick="generateFollowup('final')">
+              <span id="fufinal-spin"></span> AI Generate
+            </button>
+          </div>
+          <input type="text" id="fufinal-subject" placeholder="Subject..." style="margin-bottom:10px;" />
+          <textarea id="fufinal-body" placeholder="Write or generate final email..."></textarea>
+          <input type="date" id="fufinal-date" />
+          <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;justify-content:center;" onclick="saveFollowup('final')">
+            <span id="fufinal-save-spin"></span> 💾 Save to Schedule
+          </button>
+          <div id="fufinal-status"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: DASHBOARD ===== -->
+  <div class="page" id="page-dashboard">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;flex-wrap:wrap;gap:16px;">
+      <div>
+        <div class="section-title">Leads Dashboard</div>
+        <div class="section-sub">Track all your cold email outreach</div>
+      </div>
+      <button class="btn btn-outline" onclick="loadDashboard()">🔄 Refresh</button>
+    </div>
+
+    <div id="alert-dash"></div>
+
+    <!-- STATS -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card s1"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total Leads</div></div>
+      <div class="stat-card s2"><div class="stat-num" id="stat-replied">—</div><div class="stat-label">Replied</div></div>
+      <div class="stat-card s3"><div class="stat-num" id="stat-opens">—</div><div class="stat-label">Total Opens</div></div>
+      <div class="stat-card s4"><div class="stat-num" id="stat-sent">—</div><div class="stat-label">Emails Sent</div></div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Store URL</th>
+            <th>Email</th>
+            <th>Store Name</th>
+            <th>Status</th>
+            <th>Opens 👁</th>
+            <th>Last Open</th>
+            <th>Sent Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="leads-tbody">
+          <tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">Loading leads...</div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== CONFIG =====
+const BASE = 'https://n8n.pickedness.com/webhook';
+const GENERATE_URL   = BASE + '/generate-email';
+const SEND_URL       = BASE + '/send-email';
+const LEADS_URL      = BASE + '/read-leads';
+const REPLIED_URL    = BASE + '/mark-replied';
+
+// ===== STATE =====
+let currentRowNumber = null;
+let currentStoreUrl  = '';
+let currentToEmail   = '';
+let currentStoreName = '';
+
+// ===== NAV =====
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  event.target.classList.add('active');
+  if (page === 'dashboard') loadDashboard();
+}
+
+// ===== ALERT =====
+function showAlert(id, msg, type='error') {
+  const el = document.getElementById(id);
+  el.innerHTML = `<div class="alert alert-${type}"><span>${type==='error'?'⚠️':type==='success'?'✅':'ℹ️'}</span>${msg}</div>`;
+  setTimeout(() => { el.innerHTML = ''; }, 5000);
+}
+
+// ===== GENERATE EMAIL =====
+async function generateEmail() {
+  const storeUrl   = document.getElementById('storeUrl').value.trim();
+  const toEmail    = document.getElementById('toEmail').value.trim();
+  const senderName = document.getElementById('senderName').value.trim() || 'Shohel';
+  const language   = document.getElementById('language').value;
+
+  if (!storeUrl)  return showAlert('alert-gen', 'Please enter a Store URL.');
+  if (!toEmail)   return showAlert('alert-gen', 'Please enter a Recipient Email.');
+
+  const btn = document.getElementById('btn-generate');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Analyzing Store...';
+
+  try {
+    const res = await fetch(GENERATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ storeUrl, toEmail, senderName, language })
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.subject) throw new Error(data.error || 'Generation failed');
+
+    // Populate preview
+    document.getElementById('emailSubject').value = data.subject || '';
+    document.getElementById('emailBody').value    = data.emailBody || data.body || '';
+    currentRowNumber = data.rowNumber || data.row_number || null;
+    currentStoreUrl  = storeUrl;
+    currentToEmail   = toEmail;
+    currentStoreName = data.storeName || '';
+
+    document.getElementById('card-preview').style.display = 'block';
+    document.getElementById('card-preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    showAlert('alert-gen', 'Email generated successfully! Review and edit before sending.', 'success');
+
+  } catch(e) {
+    showAlert('alert-gen', 'Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>✨</span> Generate Email';
+  }
+}
+
+// ===== SEND EMAIL =====
+async function sendEmail() {
+  const subject   = document.getElementById('emailSubject').value.trim();
+  const emailBody = document.getElementById('emailBody').value.trim();
+  const toEmail   = document.getElementById('toEmail').value.trim();
+  const senderName = document.getElementById('senderName').value.trim() || 'Shohel';
+
+  if (!subject)   return showAlert('alert-gen', 'Subject cannot be empty.');
+  if (!emailBody) return showAlert('alert-gen', 'Email body cannot be empty.');
+
+  const btn = document.getElementById('btn-send');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Sending...';
+
+  try {
+    const res = await fetch(SEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        toEmail, subject,
+        body: emailBody,
+        rowNumber: currentRowNumber,
+        senderName, storeUrl: currentStoreUrl
+      })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || 'Send failed');
+
+    showAlert('alert-gen', `Email sent to ${toEmail} successfully!`, 'success');
+    document.getElementById('card-followup').style.display = 'block';
+    document.getElementById('card-followup').scrollIntoView({ behavior: 'smooth' });
+
+  } catch(e) {
+    showAlert('alert-gen', 'Send error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>🚀</span> Send Email';
+  }
+}
+
+// ===== COPY EMAIL =====
+function copyEmail() {
+  const subject = document.getElementById('emailSubject').value;
+  const body    = document.getElementById('emailBody').value;
+  const text    = `Subject: ${subject}\n\n${body}`;
+  navigator.clipboard.writeText(text).then(() => {
+    const fb = document.getElementById('copy-fb');
+    fb.classList.add('show');
+    setTimeout(() => fb.classList.remove('show'), 2000);
+  });
+}
+
+// ===== GENERATE FOLLOW-UP =====
+async function generateFollowup(level) {
+  const key = level === 'final' ? 'fufinal' : 'fu' + level;
+  const spinEl = document.getElementById(key + '-spin');
+  spinEl.outerHTML = `<div class="spinner" id="${key}-spin" style="width:14px;height:14px;border-width:2px;"></div>`;
+
+  const prevSubject = document.getElementById('emailSubject').value;
+  const prevBody    = document.getElementById('emailBody').value;
+
+  try {
+    const res = await fetch(GENERATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        storeUrl: currentStoreUrl,
+        toEmail: currentToEmail,
+        senderName: document.getElementById('senderName').value || 'Shohel',
+        language: document.getElementById('language').value,
+        followupLevel: level,
+        previousSubject: prevSubject,
+        previousBody: prevBody,
+        generateFollowup: true
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+
+    document.getElementById(key + '-subject').value = data.subject || '';
+    document.getElementById(key + '-body').value    = data.emailBody || data.body || '';
+
+    // Set default date
+    const days = level === 1 ? 3 : level === 2 ? 5 : level === 3 ? 7 : 10;
+    const d = new Date(); d.setDate(d.getDate() + days);
+    document.getElementById(key + '-date').value = d.toISOString().split('T')[0];
+
+  } catch(e) {
+    alert('Generate error: ' + e.message);
+  } finally {
+    const s = document.getElementById(key + '-spin');
+    if (s) s.outerHTML = `<span id="${key}-spin"></span>`;
+  }
+}
+
+// ===== SAVE FOLLOW-UP =====
+async function saveFollowup(level) {
+  const key = level === 'final' ? 'fufinal' : 'fu' + level;
+  const subject = document.getElementById(key + '-subject').value.trim();
+  const body    = document.getElementById(key + '-body').value.trim();
+  const date    = document.getElementById(key + '-date').value;
+
+  if (!subject || !body || !date) {
+    document.getElementById(key + '-status').innerHTML =
+      '<div class="alert alert-error" style="margin-top:8px;font-size:12px;">⚠️ Fill subject, body and date</div>';
+    return;
+  }
+  if (!currentRowNumber) {
+    document.getElementById(key + '-status').innerHTML =
+      '<div class="alert alert-error" style="margin-top:8px;font-size:12px;">⚠️ Generate & send main email first</div>';
+    return;
+  }
+
+  const spinEl = document.getElementById(key + '-save-spin');
+  spinEl.outerHTML = `<div class="spinner" id="${key}-save-spin" style="width:14px;height:14px;border-width:2px;"></div>`;
+
+  const levelLabel = level === 'final' ? 'Final' : 'Follow-up ' + level;
+
+  try {
+    const res = await fetch(BASE + '/save-followup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        rowNumber: currentRowNumber,
+        level: levelLabel,
+        subject, body, date
+      })
+    });
+
+    document.getElementById(key + '-status').innerHTML =
+      `<div class="alert alert-success" style="margin-top:8px;font-size:12px;">✅ Scheduled for ${date}</div>`;
+
+  } catch(e) {
+    document.getElementById(key + '-status').innerHTML =
+      `<div class="alert alert-error" style="margin-top:8px;font-size:12px;">⚠️ ${e.message}</div>`;
+  } finally {
+    const s = document.getElementById(key + '-save-spin');
+    if (s) s.outerHTML = `<span id="${key}-save-spin"></span>`;
+  }
+}
+
+// ===== RESET =====
+function resetGenerate() {
+  document.getElementById('storeUrl').value  = '';
+  document.getElementById('toEmail').value   = '';
+  document.getElementById('emailSubject').value = '';
+  document.getElementById('emailBody').value    = '';
+  document.getElementById('card-preview').style.display  = 'none';
+  document.getElementById('card-followup').style.display = 'none';
+  currentRowNumber = null; currentStoreUrl = ''; currentToEmail = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===== DASHBOARD =====
+async function loadDashboard() {
+  document.getElementById('leads-tbody').innerHTML =
+    '<tr><td colspan="9"><div class="empty-state"><div class="spinner" style="margin:0 auto;border-color:var(--border);border-top-color:var(--accent);width:28px;height:28px;"></div></div></td></tr>';
+
+  try {
+    const res = await fetch(LEADS_URL);
+    const data = await res.json();
+    const leads = data.leads || data || [];
+
+    // Stats
+    const total   = leads.length;
+    const replied = leads.filter(l => (l.Status||'').toLowerCase() === 'replied').length;
+    const sent    = leads.filter(l => (l.Status||'').toLowerCase().includes('sent')).length;
+    const opens   = leads.reduce((s, l) => s + parseInt(l['Open Count'] || 0), 0);
+
+    document.getElementById('stat-total').textContent   = total;
+    document.getElementById('stat-replied').textContent = replied;
+    document.getElementById('stat-opens').textContent   = opens;
+    document.getElementById('stat-sent').textContent    = sent;
+
+    if (!leads.length) {
+      document.getElementById('leads-tbody').innerHTML =
+        '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No leads yet. Generate your first email!</div></div></td></tr>';
+      return;
+    }
+
+    document.getElementById('leads-tbody').innerHTML = leads.map((l, i) => {
+      const status = l.Status || 'Generated';
+      const badgeClass = status.toLowerCase().includes('replied') ? 'badge-replied'
+                       : status.toLowerCase().includes('sent')    ? 'badge-sent'
+                       : status.toLowerCase().includes('generat') ? 'badge-generated'
+                       : 'badge-pending';
+      const rowNum = l.row_number || (i + 2);
+
+      return `<tr>
+        <td style="color:var(--muted);font-size:12px;">${i+1}</td>
+        <td><div class="td-url" title="${l['Store URL']||''}">${l['Store URL']||'—'}</div></td>
+        <td><div class="td-email">${l['To Email']||'—'}</div></td>
+        <td style="font-size:13px;">${l['Store Name']||'—'}</td>
+        <td><span class="badge ${badgeClass}">${status}</span></td>
+        <td><span class="td-open">${l['Open Count']||0}</span></td>
+        <td><span class="td-date">${l['Last Open']||'—'}</span></td>
+        <td><span class="td-date">${l['Sent Date']||'—'}</span></td>
+        <td>
+          ${status.toLowerCase().includes('replied') ? '<span style="color:var(--accent3);font-size:12px;">✅ Replied</span>' :
+            `<button class="btn btn-danger" onclick="markReplied(${rowNum}, this)">Mark Replied</button>`}
+        </td>
+      </tr>`;
+    }).join('');
+
+  } catch(e) {
+    showAlert('alert-dash', 'Failed to load leads: ' + e.message);
+    document.getElementById('leads-tbody').innerHTML =
+      '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Could not load leads</div></div></td></tr>';
+  }
+}
+
+// ===== MARK REPLIED =====
+async function markReplied(rowId, btn) {
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const res = await fetch(REPLIED_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rowId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      setTimeout(() => loadDashboard(), 500);
+    } else throw new Error('Failed');
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Mark Replied';
+    showAlert('alert-dash', 'Error: ' + e.message);
+  }
+}
+
+// Auto-load dashboard data when switching to it
+</script>
+</body>
+</html>

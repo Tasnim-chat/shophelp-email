@@ -535,7 +535,11 @@ async function generateEmail() {
     const rowNum = result.row_number || result.rowNumber || null;
     const storeName = result['Store Name'] || result.storeName || '';
 
-    if (!res.ok || !subject) throw new Error(result.error || 'Generation failed');
+    console.log('RAW data:', JSON.stringify(data));
+    console.log('result:', JSON.stringify(result));
+    console.log('subject:', subject, 'emailBody:', emailBody);
+
+    if (!res.ok || !subject) throw new Error(result.error || 'Generation failed — subject: ' + subject);
 
     // Populate preview
     document.getElementById('emailSubject').value = subject;

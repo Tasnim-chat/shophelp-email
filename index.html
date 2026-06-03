@@ -527,17 +527,13 @@ async function generateEmail() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ storeUrl, toEmail, senderName, language })
     });
-    const data = await res.json();
+    const result = data.data || data;
+if (!res.ok || !result.subject) throw new Error(result.error || 'Generation failed');
 
-    if (!res.ok || !data.subject) throw new Error(data.error || 'Generation failed');
-
-    // Populate preview
-    document.getElementById('emailSubject').value = data.subject || '';
-    document.getElementById('emailBody').value    = data.emailBody || data.body || '';
-    currentRowNumber = data.rowNumber || data.row_number || null;
-    currentStoreUrl  = storeUrl;
-    currentToEmail   = toEmail;
-    currentStoreName = data.storeName || '';
+document.getElementById('emailSubject').value = result.subject || '';
+document.getElementById('emailBody').value    = result.emailBody || result.body || '';
+currentRowNumber = result.rowNumber || result.row_number || null;
+currentStoreName = result.storeName || result['Store Name'] || '';
 
     document.getElementById('card-preview').style.display = 'block';
     document.getElementById('card-preview').scrollIntoView({ behavior: 'smooth', block: 'start' });

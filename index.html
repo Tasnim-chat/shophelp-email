@@ -530,15 +530,20 @@ async function generateEmail() {
     const data = await res.json();
 
     const result = data.data || data;
-    if (!res.ok || !result.subject) throw new Error(result.error || 'Generation failed');
+    const subject = result.Subject || result.subject || '';
+    const emailBody = result['Email Body'] || result.emailBody || result.body || '';
+    const rowNum = result.row_number || result.rowNumber || null;
+    const storeName = result['Store Name'] || result.storeName || '';
+
+    if (!res.ok || !subject) throw new Error(result.error || 'Generation failed');
 
     // Populate preview
-    document.getElementById('emailSubject').value = result.subject || '';
-    document.getElementById('emailBody').value    = result.emailBody || result.body || result['Email Body'] || '';
-    currentRowNumber = result.rowNumber || result.row_number || null;
+    document.getElementById('emailSubject').value = subject;
+    document.getElementById('emailBody').value    = emailBody;
+    currentRowNumber = rowNum;
     currentStoreUrl  = storeUrl;
     currentToEmail   = toEmail;
-    currentStoreName = result.storeName || result['Store Name'] || '';
+    currentStoreName = storeName;
 
     document.getElementById('card-preview').style.display = 'block';
     document.getElementById('card-preview').scrollIntoView({ behavior: 'smooth', block: 'start' });

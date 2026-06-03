@@ -529,16 +529,15 @@ async function generateEmail() {
     });
     const data = await res.json();
 
-    // n8n returns: {success, data: {subject, body, storeName, ...}}
     const result = data.data || data;
-    console.log('RESULT KEYS:', Object.keys(result));
-    const subject = result.subject || result.Subject || result['Subject'] || '';
-    const emailBody = result.body || result.emailBody || result['Email Body'] || result['body'] || '';
+    // n8n puts email content inside result.email object
+    const emailObj = result.email || {};
+    const subject = emailObj.subject || result.subject || result.Subject || '';
+    const emailBody = emailObj.body || result.body || result.emailBody || result['Email Body'] || '';
     const rowNum = result.row_number || result.rowNumber || null;
-    const storeName = result.storeName || result['Store Name'] || result['storeName'] || '';
-    console.log('subject:', subject, '| body:', emailBody.substring(0,30));
+    const storeName = result.storeName || result['Store Name'] || '';
 
-    if (!res.ok || !subject) throw new Error('No subject in response. Keys: ' + Object.keys(result).join(','));
+    if (!res.ok || !subject) throw new Error(result.error || 'Generation failed');
 
     // Populate preview
     document.getElementById('emailSubject').value = subject;
